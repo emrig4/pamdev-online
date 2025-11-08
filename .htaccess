@@ -1,0 +1,27 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+    
+    # IMPORTANT: Only apply these rules to pamdev.online domain
+    RewriteCond %{HTTP_HOST} ^(www\.)?pamdev\.online$ [NC]
+    
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteCond %{HTTP_HOST} ^(www\.)?pamdev\.online$ [NC]
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirect Trailing Slashes If Not A Folder
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteCond %{HTTP_HOST} ^(www\.)?pamdev\.online$ [NC]
+    RewriteRule ^ %1 [L,R=301]
+
+    # Handle Front Controller
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{HTTP_HOST} ^(www\.)?pamdev\.online$ [NC]
+    RewriteRule ^ index.php [L]
+</IfModule>

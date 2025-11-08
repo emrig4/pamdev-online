@@ -1,0 +1,238 @@
+<?php
+
+namespace App\Modules\Payment\Http\Controllers;
+
+use Illuminate\Contracts\Support\Renderable;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
+use App\Modules\Wallet\Models\CreditWallet;
+use App\Modules\Wallet\Models\CreditWalletTransaction;
+use App\Models\User;
+use Carbon\Carbon;
+
+class PaystackPackagesController extends Controller
+{
+    /**
+     * Display packages page
+     */
+    public function index()
+    {
+        $packages = [
+            [
+                'id' => 'basic',
+                'name' => 'Basic Plan',
+                'amount' => 500000, // 5000 Naira in kobo
+                'description' => 'Perfect for getting started with our platform',
+                'features' => ['Access to basic resources', 'Email support', '30-day access']
+            ],
+            [
+                'id' => 'standard',
+                'name' => 'Standard Plan',
+                'amount' => 1000000, // 10000 Naira in kobo
+                'description' => 'Great for regular users who need more features',
+                'features' => ['Access to all resources', 'Priority support', '90-day access', 'Download protection']
+            ],
+            [
+                'id' => 'premium',
+                'name' => 'Premium Plan',
+                'amount' => 2000000, // 20000 Naira in kobo
+                'description' => 'For professionals and power users',
+                'features' => ['Unlimited access', 'Premium support', '365-day access', 'Advanced features', 'API access']
+            ]
+        ];
+
+        return view('payment::packages', compact('packages'));
+    }
+
+    /**
+     * Initialize payment for packages (Inline mode)
+     */
+    public function initializePackagePayment(Request $request)
+    {
+        $request->validate([
+            'package_id' => 'required|string',
+            'email' => 'required|email'
+        ]);
+
+        $packages = [
+            'basic' => ['amount' => 500000, 'name' => 'Basic Plan'],
+            'standard' => ['amount' => 1000000, 'name' => 'Standard Plan'],
+            'premium' => ['amount' => 2000000, 'name' => 'Premium Plan']
+        ];
+
+        $package = $packages[$request->package_id] ?? null;
+
+        if (!$package) {
+            return response()->json(['error' => 'Invalid package selected'], 400);
+        }
+
+        try {
+            // Generate unique reference
+            $reference = 'PKG_' . time() . '_' . rand(1000, 9999);
+            
+            // Prepare payment data for Paystack inline
+            $paymentData = [
+                'reference' => $reference,
+                'amount' => $package['amount'],
+                'email' => $request->email,
+                'currency' => 'NGN',
+                'callback_url' => route('packages.callback'),
+                'metadata' => [
+                    'package_id' => $request->package_id,
+                    'package_name' => $package['name'],
+                    'user_id' => auth()->id(),
+                    'customer_type' => 'package_purchase'
+                ]
+            ];
+
+            return response()->json([
+                'success' => true,
+                'payment_data' => $paymentData
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Payment initialization failed'], 500);
+        }
+    }
+
+    /**
+     * Handle Paystack webhook callback (for package purchases)
+     */
+    public function handlePackageCallback(Request $request)
+    {
+        // Verify the webhook signature (important for security)
+        $signature = $request->header('x-paystack-signature');
+        
+        if (!$this->verifyPaystackSignature($request->getContent(), $signature)) {
+            return response('Unauthorized', 401);
+        }
+
+        try {
+            $payload = json_decode($request->getContent(), true);
+            
+            if ($payload['event'] === 'charge.success') {
+                $data = $payload['data'];
+                $reference = $data['reference'];
+                $amount = $data['amount']; // Amount in kobo
+                $status = $data['status'];
+                $metadata = $data['metadata'];
+
+                if ($status === 'success') {
+                    $userId = $metadata['user_id'];
+                    $packageId = $metadata['package_id'];
+                    $amountInNaira = $amount / 100;
+
+                    // Find or create user's wallet
+                    $wallet = CreditWallet::firstOrCreate(
+                        ['user_id' => $userId],
+                        ['balance' => 0]
+                    );
+
+                    // Credit the wallet
+                    DB::transaction(function() use ($wallet, $userId, $amountInNaira, $packageId, $reference) {
+                        // Increment wallet balance
+                        $wallet->increment('balance', $amountInNaira);
+
+                        // Log transaction
+                        CreditWalletTransaction::create([
+                            'credit_wallet_id' => $wallet->id,
+                            'type' => 'credit',
+                            'amount' => $amountInNaira,
+                            'status' => 'completed',
+                            'reference' => $reference,
+                            'note' => "Package purchase - {$packageId}",
+                            'payment_method' => 'paystack',
+                            'admin_id' => null
+                        ]);
+                    });
+
+                    // Log success
+                    \Log::info('Package payment successful', [
+                        'user_id' => $userId,
+                        'package_id' => $packageId,
+                        'amount' => $amountInNaira,
+                        'reference' => $reference
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Payment successful! Your wallet has been credited.',
+                        'wallet_balance' => $wallet->fresh()->balance
+                    ]);
+                }
+            }
+
+            return response()->json(['success' => false, 'message' => 'Payment not successful']);
+
+        } catch (\Exception $e) {
+            \Log::error('Paystack callback error', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Payment processing failed'], 500);
+        }
+    }
+
+    /**
+     * Verify Paystack webhook signature
+     */
+    private function verifyPaystackSignature($payload, $signature)
+    {
+        $secretKey = config('paystack.secretKey');
+        
+        if (!$secretKey) {
+            return false;
+        }
+
+        $computedSignature = hash_hmac('sha512', $payload, $secretKey);
+        
+        return hash_equals($signature, $computedSignature);
+    }
+
+    /**
+     * Success page after payment
+     */
+    public function success()
+    {
+        return view('payment::success');
+    }
+
+    /**
+     * Generate Paystack inline JavaScript code
+     */
+    public function getInlineScript()
+    {
+        $publicKey = config('paystack.publicKey');
+        
+        $script = "
+        <script src='https://js.paystack.co/v1/inline.js'></script>
+        <script>
+        function initializePayment(paymentData, callback) {
+            if (typeof PaystackPop === 'undefined') {
+                callback({success: false, message: 'Paystack library not loaded'});
+                return;
+            }
+
+            const handler = PaystackPop.setup({
+                key: '$publicKey',
+                email: paymentData.email,
+                amount: paymentData.amount,
+                currency: paymentData.currency || 'NGN',
+                reference: paymentData.reference,
+                callback: function(response) {
+                    // Payment successful, send to callback
+                    callback({success: true, reference: response.reference});
+                },
+                onClose: function() {
+                    callback({success: false, message: 'Payment was not completed'});
+                },
+                metadata: paymentData.metadata || {}
+            });
+
+            // Open payment popup (inline mode)
+            handler.openIframe();
+        }
+        </script>
+        ";
+
+        return $script;
+    }
+}

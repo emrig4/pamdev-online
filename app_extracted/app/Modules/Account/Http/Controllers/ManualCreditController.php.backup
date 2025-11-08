@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Modules\Account\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Modules\Wallet\Http\Traits\WalletTrait;
+
+class ManualCreditController
+{
+    use WalletTrait;
+
+    public function index()
+    {
+        $users = DB::table('users')
+            ->leftJoin('subscription_wallets', 'users.id', '=', 'subscription_wallets.user_id')
+            ->select('users.id', 'users.name', 'users.email', 'subscription_wallets.ranc')
+            ->orderBy('users.name')
+            ->get();
+
+        return view('account::manual-credit', compact('users'));
+    }
+
+    public function processCredit(Request $request)
+    {
+        $request->validate([
+            'user_email' => 'required|email|exists:users,email',
+            'ranc_amount' => 'required|numeric|min:1',
+            'reason' => 'required|string|max:255'
+        ]);
+
+        try {
+            $user = \App\Models\User::where('email', $request->user_email)->firstOrFail();
+            $rancAmount = $request->ranc_amount;
+            $reason = $request->reason;
+
+            $this->creditSubscriptionWallet($rancAmount);
+
+            DB::table('wallet_transactions')->insert([
+                'user_id' => $user->id,
+                'type' => 'manual_credit',
+                'amount' => $rancAmount,
+                'reason' => $reason,
+                'reference' => 'manual_' . time(),
+                'status' => 'completed',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            return back()->with('success', "Successfully credited {$rancAmount} RANC to {$user->name} ({$user->email})!");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to credit wallet: ' . $e->getMessage());
+        }
+    }
+}

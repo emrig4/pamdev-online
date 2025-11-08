@@ -1,0 +1,111 @@
+service: authoran-document-converter
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  memorySize: 3008
+  timeout: 900  # 15 minutes for document conversion
+  environment:
+    OUTPUT_BUCKET: ${env:OUTPUT_BUCKET, 'authoran-converted-docs'}
+    ERROR_BUCKET: ${env:ERROR_BUCKET, 'authoran-conversion-errors'}
+    CLEANUP_TIMEOUT: '300'
+  
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:DeleteObject
+            - s3:ListBucket
+          Resource:
+            - arn:aws:s3:::${env:INPUT_BUCKET, 'authoran-user-uploads'}
+            - arn:aws:s3:::${env:OUTPUT_BUCKET, 'authoran-converted-docs'}
+            - arn:aws:s3:::${env:ERROR_BUCKET, 'authoran-conversion-errors'}
+            - arn:aws:s3:::${env:INPUT_BUCKET, 'authoran-user-uploads'}/*
+            - arn:aws:s3:::${env:OUTPUT_BUCKET, 'authoran-converted-docs'}/*
+            - arn:aws:s3:::${env:ERROR_BUCKET, 'authoran-conversion-errors'}/*
+
+functions:
+  convertDocument:
+    handler: document-converter.lambda_handler
+    description: Convert DOC/DOCX files to PDF
+    events:
+      - s3:
+          bucket: ${env:INPUT_BUCKET, 'authoran-user-uploads'}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: uploads/
+            - suffix: .doc
+            - suffix: .docx
+            - suffix: .odt
+            - suffix: .rtf
+  
+  convertDocumentApi:
+    handler: document-converter.lambda_handler
+    description: API endpoint for document conversion
+    events:
+      - httpApi:
+          path: /convert
+          method: post
+      - httpApi:
+          path: /convert/{id}
+          method: get
+
+resources:
+  Resources:
+    # S3 bucket for converted documents
+    ConvertedDocsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${env:OUTPUT_BUCKET, 'authoran-converted-docs'}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ['*']
+              AllowedMethods: ['GET', 'PUT', 'POST', 'DELETE']
+              AllowedOrigins: ['*']
+              MaxAge: 3000
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+
+    # S3 bucket for error logs
+    ErrorBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${env:ERROR_BUCKET, 'authoran-conversion-errors'}
+        LifecycleConfiguration:
+          Rules:
+            - Id: DeleteOldErrors
+              Status: Enabled
+              ExpirationInDays: 30
+
+    # CloudWatch Log Group
+    DocumentConverterLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/authoran-document-converter-dev-convertDocument
+        RetentionInDays: 14
+
+  Outputs:
+    ConvertedDocsBucketName:
+      Value: !Ref ConvertedDocsBucket
+      Export:
+        Name: AuthoranConvertedDocsBucket
+
+    ConvertedDocsBucketArn:
+      Value: !GetAtt ConvertedDocsBucket.Arn
+      Export:
+        Name: AuthoranConvertedDocsBucketArn
+
+    ErrorBucketName:
+      Value: !Ref ErrorBucket
+      Export:
+        Name: AuthoranErrorBucket

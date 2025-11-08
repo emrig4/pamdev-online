@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /_debugbar/
+
+# Allow important public pages
+Allow: /about-us
+Allow: /how-it-works
+Allow: /faq
+Allow: /privacy-policy
+Allow: /blog
+Allow: /resources/
+Allow: /resources/fields
+
+# SEO Crawl-delay
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://pamdev.online/sitemap.xml

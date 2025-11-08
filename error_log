@@ -1,0 +1,60 @@
+[23-Jul-2022 17:35:12 America/New_York] PHP Fatal error:  Uncaught Symfony\Component\Console\Exception\RuntimeException: Unable to write output. in phar:///opt/cpanel/composer/bin/composer/vendor/symfony/console/Output/StreamOutput.php:79
+Stack trace:
+#0 phar:///opt/cpanel/composer/bin/composer/vendor/symfony/console/Output/Output.php(164): Symfony\Component\Console\Output\StreamOutput->doWrite('\n', true)
+#1 phar:///opt/cpanel/composer/bin/composer/vendor/symfony/console/Output/Output.php(132): Symfony\Component\Console\Output\Output->write(Array, true, 16)
+#2 phar:///opt/cpanel/composer/bin/composer/vendor/symfony/console/Application.php(641): Symfony\Component\Console\Output\Output->writeln('', 16)
+#3 phar:///opt/cpanel/composer/bin/composer/vendor/symfony/console/Application.php(127): Symfony\Component\Console\Application->renderException(Object(Symfony\Component\Console\Exception\RuntimeException), Object(Symfony\Component\Console\Output\StreamOutput))
+#4 phar:///opt/cpanel/composer/bin/composer/src/Composer/Console/Application.php(131): Symfony\Component\Conso in phar:///opt/cpanel/composer/bin/composer/vendor/symfony/console/Output/StreamOutput.php on line 79
+[06-Nov-2025 10:30:45 UTC] PHP Fatal error:  During class fetch: Uncaught ParseError: syntax error, unexpected token "if", expecting "]" in /home/projtpyy/pamdev.online/app/Modules/Wallet/Http/Traits/WalletTrait.php:57
+Stack trace:
+#0 /home/projtpyy/pamdev.online/vendor/composer/ClassLoader.php(427): Composer\Autoload\{closure}()
+#1 /home/projtpyy/pamdev.online/app/Console/Commands/CreditWallet.php(8): Composer\Autoload\ClassLoader->loadClass()
+#2 /home/projtpyy/pamdev.online/vendor/composer/ClassLoader.php(576): include('/home/projtpyy/...')
+#3 /home/projtpyy/pamdev.online/vendor/composer/ClassLoader.php(427): Composer\Autoload\{closure}()
+#4 [internal function]: Composer\Autoload\ClassLoader->loadClass()
+#5 /home/projtpyy/pamdev.online/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(229): is_subclass_of()
+#6 /home/projtpyy/pamdev.online/app/Console/Kernel.php(37): Illuminate\Foundation\Console\Kernel->load()
+#7 /home/projtpyy/pamdev.online/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(316): App\Console\Kernel->commands()
+#8 /home/projtpyy/pamdev.online/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(127): Illuminate\Foundation\Console\Kernel->bootstrap()
+#9 /home/projtpyy/pamdev.online/artisan(37): Illuminate\Foundation\Console\Kernel->handle()
+#10 {main} in /home/projtpyy/pamdev.online/app/Console/Commands/CreditWallet.php on line 8
+[06-Nov-2025 10:30:45 UTC] PHP Fatal error:  During class fetch: Uncaught ParseError: syntax error, unexpected token "if", expecting "]" in /home/projtpyy/pamdev.online/app/Modules/Wallet/Http/Traits/WalletTrait.php:57
+Stack trace:
+#0 /home/projtpyy/pamdev.online/vendor/composer/ClassLoader.php(427): Composer\Autoload\{closure}()
+#1 /home/projtpyy/pamdev.online/app/Console/Commands/CreditWallet.php(8): Composer\Autoload\ClassLoader->loadClass()
+#2 /home/projtpyy/pamdev.online/vendor/composer/ClassLoader.php(576): include('/home/projtpyy/...')
+#3 /home/projtpyy/pamdev.online/vendor/composer/ClassLoader.php(427): Composer\Autoload\{closure}()
+#4 [internal function]: Composer\Autoload\ClassLoader->loadClass()
+#5 /home/projtpyy/pamdev.online/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(229): is_subclass_of()
+#6 /home/projtpyy/pamdev.online/app/Console/Kernel.php(37): Illuminate\Foundation\Console\Kernel->load()
+#7 /home/projtpyy/pamdev.online/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(316): App\Console\Kernel->commands()
+#8 /home/projtpyy/pamdev.online/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(127): Illuminate\Foundation\Console\Kernel->bootstrap()
+#9 /home/projtpyy/pamdev.online/artisan(37): Illuminate\Foundation\Console\Kernel->handle()
+#10 {main} in /home/projtpyy/pamdev.online/app/Console/Commands/CreditWallet.php on line 8
+[06-Nov-2025 10:30:45 UTC] PHP Fatal error:  During class fetch: Uncaught ParseError: syntax error, unexpected token "if", expecting "]" in /home/projtpyy/pamdev.online/app/Modules/Wallet/Http/Traits/WalletTrait.php:57
+Stack trace:
+#0 /home/projtpyy/pamdev.online/vendor/composer/ClassLoader.php(427): Composer\Autoload\{closure}()
+#1 /home/projtpyy/pamdev.online/app/Console/Commands/CreditWallet.php(8): Composer\Autoload\ClassLoader->loadClass()
+#2 /home/projtpyy/pamdev.online/vendor/composer/ClassLoader.php(576): include('/home/projtpyy/...')
+#3 /home/projtpyy/pamdev.online/vendor/composer/ClassLoader.php(427): Composer\Autoload\{closure}()
+#4 [internal function]: Composer\Autoload\ClassLoader->loadClass()
+#5 /home/projtpyy/pamdev.online/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(229): is_subclass_of()
+#6 /home/projtpyy/pamdev.online/app/Console/Kernel.php(37): Illuminate\Foundation\Console\Kernel->load()
+#7 /home/projtpyy/pamdev.online/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(316): App\Console\Kernel->commands()
+#8 /home/projtpyy/pamdev.online/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(127): Illuminate\Foundation\Console\Kernel->bootstrap()
+#9 /home/projtpyy/pamdev.online/artisan(37): Illuminate\Foundation\Console\Kernel->handle()
+#10 {main} in /home/projtpyy/pamdev.online/app/Console/Commands/CreditWallet.php on line 8
+[06-Nov-2025 10:30:46 UTC] PHP Fatal error:  During class fetch: Uncaught ParseError: syntax error, unexpected token "if", expecting "]" in /home/projtpyy/pamdev.online/app/Modules/Wallet/Http/Traits/WalletTrait.php:57
+Stack trace:
+#0 /home/projtpyy/pamdev.online/vendor/composer/ClassLoader.php(427): Composer\Autoload\{closure}()
+#1 /home/projtpyy/pamdev.online/app/Console/Commands/CreditWallet.php(8): Composer\Autoload\ClassLoader->loadClass()
+#2 /home/projtpyy/pamdev.online/vendor/composer/ClassLoader.php(576): include('/home/projtpyy/...')
+#3 /home/projtpyy/pamdev.online/vendor/composer/ClassLoader.php(427): Composer\Autoload\{closure}()
+#4 [internal function]: Composer\Autoload\ClassLoader->loadClass()
+#5 /home/projtpyy/pamdev.online/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(229): is_subclass_of()
+#6 /home/projtpyy/pamdev.online/app/Console/Kernel.php(37): Illuminate\Foundation\Console\Kernel->load()
+#7 /home/projtpyy/pamdev.online/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(316): App\Console\Kernel->commands()
+#8 /home/projtpyy/pamdev.online/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(127): Illuminate\Foundation\Console\Kernel->bootstrap()
+#9 /home/projtpyy/pamdev.online/artisan(37): Illuminate\Foundation\Console\Kernel->handle()
+#10 {main} in /home/projtpyy/pamdev.online/app/Console/Commands/CreditWallet.php on line 8
+[08-Nov-2025 07:45:17 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/projtpyy/pamdev.online/app/Modules/Admin/Http/Controllers/Admin/SeoController.php on line 4

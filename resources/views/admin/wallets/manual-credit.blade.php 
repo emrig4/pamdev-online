@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Wallet Credit - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+        }
+        
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        .search-results {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #f9fafb;
+        }
+        
+        .search-item {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .search-item:hover {
+            background: #f3f4f6;
+        }
+        
+        .search-item:last-child {
+            border-bottom: none;
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .user-email {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .user-balance {
+            color: #059669;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .alert {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        
+        .user-details {
+            background: #f8fafc;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        
+        .user-details h3 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #6b7280;
+        }
+        
+        .detail-value {
+            color: #1e293b;
+            font-weight: 500;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f4f6;
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .credit-form {
+            background: #f8fafc;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .history-table th,
+        .history-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .history-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .history-table tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        @media (max-width: 768px) {
+            .row {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 Manual Wallet Credit System</h1>
+            <p>Credit user RANC wallets manually using the tested system approach</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alert-container"></div>
+
+        <!-- Main Content -->
+        <div class="card">
+            <h2 class="card-title">
+                🔍 Search and Select User
+            </h2>
+            
+            <div class="form-group">
+                <label class="form-label">Search by Name, Email, or Username</label>
+                <input type="text" id="user-search" class="form-input" placeholder="Start typing to search users...">
+                <div id="search-results" class="search-results" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- User Details and Credit Form -->
+        <div class="row">
+            <!-- Selected User Details -->
+            <div class="card">
+                <h2 class="card-title">👤 User Information</h2>
+                <div id="user-details" style="display: none;"></div>
+                <div id="no-user-selected" style="text-align: center; color: #64748b; padding: 20px;">
+                    <p>Please search and select a user to view their details</p>
+                </div>
+            </div>
+
+            <!-- Credit Form -->
+            <div class="card">
+                <h2 class="card-title">💰 Credit Amount</h2>
+                <div id="credit-form" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Amount to Credit (RANC)</label>
+                        <input type="number" id="credit-amount" class="form-input" min="0.01" step="0.01" placeholder="Enter amount">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Remark/Note</label>
+                        <input type="text" id="credit-remark" class="form-input" placeholder="Reason for credit (e.g., Bonus, Refund, etc.)">
+                    </div>
+                    
+                    <button type="button" id="process-credit" class="btn btn-primary" style="width: 100%;">
+                        <span id="process-btn-text">💳 Credit Wallet</span>
+                        <span id="process-btn-spinner" class="spinner" style="display: none;"></span>
+                    </button>
+                </div>
+                <div id="no-credit-form" style="text-align: center; color: #64748b; padding: 20px;">
+                    <p>Select a user to enable credit form</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Credits -->
+        <div class="card">
+            <h2 class="card-title">📋 Recent Manual Credits</h2>
+            <div id="recent-credits">
+                @if($recentCredits->count() > 0)
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Amount</th>
+                                <th>Remark</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($recentCredits as $credit)
+                                <tr>
+                                    <td>{{ $credit->user->name ?? 'N/A' }}<br><small>{{ $credit->user->email ?? '' }}</small></td>
+                                    <td>{{ number_format($credit->ranc, 2) }} RANC</td>
+                                    <td>{{ $credit->remark }}</td>
+                                    <td>{{ $credit->created_at->format('Y-m-d H:i') }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <p style="text-align: center; color: #64748b; padding: 20px;">No recent manual credits found</p>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let selectedUser = null;
+        let searchTimeout = null;
+
+        // DOM Elements
+        const userSearchInput = document.getElementById('user-search');
+        const searchResultsDiv = document.getElementById('search-results');
+        const userDetailsDiv = document.getElementById('user-details');
+        const creditFormDiv = document.getElementById('credit-form');
+        const alertContainer = document.getElementById('alert-container');
+
+        // Utility Functions
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.style.opacity = '0';
+                setTimeout(() => alertContainer.innerHTML = '', 300);
+            }, 5000);
+        }
+
+        function formatRANC(amount) {
+            return new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        // Search functionality
+        userSearchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            // Clear previous timeout
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+            
+            if (query.length < 2) {
+                searchResultsDiv.style.display = 'none';
+                return;
+            }
+            
+            // Debounce search
+            searchTimeout = setTimeout(() => {
+                searchUsers(query);
+            }, 300);
+        });
+
+        function searchUsers(query) {
+            const encodedQuery = encodeURIComponent(query);
+            
+            fetch(`/admin/wallets/search-users?q=${encodedQuery}`)
+                .then(response => response.json())
+                .then(users => {
+                    displaySearchResults(users);
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    showAlert('Error searching users', 'error');
+                });
+        }
+
+        function displaySearchResults(users) {
+            if (users.length === 0) {
+                searchResultsDiv.innerHTML = '<div class="search-item" style="text-align: center; color: #64748b;">No users found</div>';
+            } else {
+                searchResultsDiv.innerHTML = users.map(user => `
+                    <div class="search-item" onclick="selectUser(${user.id})">
+                        <div class="user-info">
+                            <div class="user-name">${user.name}</div>
+                            <div class="user-email">${user.email}</div>
+                            <div class="user-balance">Current Balance: ${user.ranc} RANC</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            searchResultsDiv.style.display = 'block';
+        }
+
+        function selectUser(userId) {
+            // Clear search and hide results
+            userSearchInput.value = '';
+            searchResultsDiv.style.display = 'none';
+            
+            // Get user details
+            getUserDetails(userId);
+        }
+
+        function getUserDetails(userId) {
+            fetch('/admin/wallets/get-user-details', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ user_id: userId })
+            })
+            .then(response => response.json())
+            .then(userData => {
+                selectedUser = userData;
+                displayUserDetails(userData);
+            })
+            .catch(error => {
+                console.error('Error fetching user details:', error);
+                showAlert('Error loading user details', 'error');
+            });
+        }
+
+        function displayUserDetails(userData) {
+            const wallet = userData.subscription_wallet;
+            const walletStatus = wallet.active ? 'Active' : 'Inactive';
+            const walletStatusColor = wallet.active ? '#059669' : '#dc2626';
+            
+            userDetailsDiv.innerHTML = `
+                <div class="user-details">
+                    <h3>User Information</h3>
+                    <div class="detail-row">
+                        <span class="detail-label">Name:</span>
+                        <span class="detail-value">${userData.name}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">${userData.email}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Username:</span>
+                        <span class="detail-value">${userData.username}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Current RANC:</span>
+                        <span class="detail-value" style="color: #059669; font-weight: bold;">${wallet.formatted_ranc} RANC</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Wallet Status:</span>
+                        <span class="detail-value" style="color: ${walletStatusColor}; font-weight: bold;">${walletStatus}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Reference:</span>
+                        <span class="detail-value">${wallet.reference}</span>
+                    </div>
+                </div>
+            `;
+            
+            userDetailsDiv.style.display = 'block';
+            creditFormDiv.style.display = 'block';
+            document.getElementById('no-user-selected').style.display = 'none';
+            document.getElementById('no-credit-form').style.display = 'none';
+            
+            // Clear form
+            document.getElementById('credit-amount').value = '';
+            document.getElementById('credit-remark').value = '';
+        }
+
+        // Credit functionality
+        document.getElementById('process-credit').addEventListener('click', function() {
+            if (!selectedUser) {
+                showAlert('Please select a user first', 'error');
+                return;
+            }
+            
+            const amount = parseFloat(document.getElementById('credit-amount').value);
+            const remark = document.getElementById('credit-remark').value.trim();
+            
+            // Validation
+            if (!amount || amount <= 0) {
+                showAlert('Please enter a valid amount', 'error');
+                return;
+            }
+            
+            if (!remark) {
+                showAlert('Please enter a remark/note', 'error');
+                return;
+            }
+            
+            processManualCredit(selectedUser.id, amount, remark);
+        });
+
+        function processManualCredit(userId, amount, remark) {
+            const btn = document.getElementById('process-credit');
+            const btnText = document.getElementById('process-btn-text');
+            const btnSpinner = document.getElementById('process-btn-spinner');
+            
+            // Show loading state
+            btn.disabled = true;
+            btnText.textContent = 'Processing...';
+            btnSpinner.style.display = 'inline-block';
+            
+            fetch('/admin/wallets/process-credit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    amount: amount,
+                    remark: remark
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reset button state
+                btn.disabled = false;
+                btnText.textContent = '💳 Credit Wallet';
+                btnSpinner.style.display = 'none';
+                
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    
+                    // Update user details with new balance
+                    selectedUser.subscription_wallet.ranc = data.data.new_balance;
+                    selectedUser.subscription_wallet.formatted_ranc = data.data.formatted_new_balance;
+                    displayUserDetails(selectedUser);
+                    
+                    // Clear form
+                    document.getElementById('credit-amount').value = '';
+                    document.getElementById('credit-remark').value = '';
+                    
+                    // Refresh recent credits (optional)
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showAlert(data.message || 'Error processing credit', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Credit error:', error);
+                showAlert('Error processing credit request', 'error');
+                
+                // Reset button state
+                btn.disabled = false;
+                btnText.textContent = '💳 Credit Wallet';
+                btnSpinner.style.display = 'none';
+            });
+        }
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!userSearchInput.contains(e.target) && !searchResultsDiv.contains(e.target)) {
+                searchResultsDiv.style.display = 'none';
+            }
+        });
+    </script>
+
+    <!-- CSRF Token for Laravel -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+</body>
+</html>

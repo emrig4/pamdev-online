@@ -1,0 +1,229 @@
+<?php
+
+namespace App\Modules\Wallet\Http\Controllers\Admin;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+
+class ManualCreditController extends Controller
+{
+    use \App\Modules\Wallet\Http\Traits\WalletTrait;
+
+    /**
+     * Test the manual credit functionality
+     * This mimics the exact tinker command: $user = App\Models\User::find(1); $user->subscriptionWallet->increment('ranc', 500);
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function testManualCredit(Request $request)
+    {
+        try {
+            // Get test parameters
+            $userId = $request->get('user_id', 1);
+            $amount = $request->get('amount', 500);
+            $remark = $request->get('remark', 'Test Manual Credit');
+
+            // Load user with subscription wallet
+            $user = \App\Models\User::with('subscriptionWallet')->find($userId);
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "User with ID {$userId} not found",
+                    'test_data' => [
+                        'user_id' => $userId,
+                        'amount' => $amount,
+                        'remark' => $remark
+                    ]
+                ], 404);
+            }
+
+            // Get current balance before credit
+            $currentBalance = $user->subscriptionWallet ? $user->subscriptionWallet->ranc : 0;
+
+            // Test the exact method from tinker: increment('ranc', $amount)
+            if ($user->subscriptionWallet) {
+                $user->subscriptionWallet->increment('ranc', $amount);
+                $user->subscriptionWallet->save();
+            } else {
+                // Create wallet if doesn't exist (shouldn't happen normally)
+                $wallet = new \App\Modules\Wallet\Models\SubscriptionWallet();
+                $wallet->user_id = $userId;
+                $wallet->ranc = $amount;
+                $wallet->reference = 'test-' . uniqid();
+                $wallet->save();
+            }
+
+            // Refresh user data
+            $user->refresh();
+            $user->load('subscriptionWallet');
+            
+            $newBalance = $user->subscriptionWallet ? $user->subscriptionWallet->ranc : 0;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Test completed successfully',
+                'method_tested' => '$user->subscriptionWallet->increment("ranc", ' . $amount . ')',
+                'test_data' => [
+                    'user_id' => $userId,
+                    'user_name' => $user->name,
+                    'user_email' => $user->email,
+                    'amount_credited' => $amount,
+                    'previous_balance' => $currentBalance,
+                    'new_balance' => $newBalance,
+                    'balance_increased_by' => $newBalance - $currentBalance,
+                    'reference' => $user->subscriptionWallet->reference ?? 'N/A',
+                    'tinker_command' => '$user = App\Models\User::find(' . $userId . '); $user->subscriptionWallet->increment("ranc", ' . $amount . ');'
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Test failed: ' . $e->getMessage(),
+                'error_details' => [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ],
+                'suggestion' => 'Check if user exists and has a subscription wallet'
+            ], 500);
+        }
+    }
+
+    /**
+     * Verify wallet structure and data
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function verifyWalletSystem(Request $request)
+    {
+        try {
+            $userId = $request->get('user_id', 1);
+            $user = \App\Models\User::find($userId);
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "User with ID {$userId} not found"
+                ], 404);
+            }
+
+            $subscriptionWallet = $user->subscriptionWallet;
+            $creditWallet = $user->creditWallet;
+
+            return response()->json([
+                'success' => true,
+                'user_info' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'username' => $user->username
+                ],
+                'subscription_wallet' => $subscriptionWallet ? [
+                    'exists' => true,
+                    'id' => $subscriptionWallet->id,
+                    'user_id' => $subscriptionWallet->user_id,
+                    'ranc' => $subscriptionWallet->ranc,
+                    'reference' => $subscriptionWallet->reference,
+                    'active' => $subscriptionWallet->active,
+                    'expiring' => $subscriptionWallet->expiring,
+                    'created_at' => $subscriptionWallet->created_at,
+                    'updated_at' => $subscriptionWallet->updated_at
+                ] : [
+                    'exists' => false,
+                    'message' => 'No subscription wallet found'
+                ],
+                'credit_wallet' => $creditWallet ? [
+                    'exists' => true,
+                    'id' => $creditWallet->id,
+                    'user_id' => $creditWallet->user_id,
+                    'ranc' => $creditWallet->ranc
+                ] : [
+                    'exists' => false,
+                    'message' => 'No credit wallet found'
+                ],
+                'available_methods' => [
+                    'increment' => '$user->subscriptionWallet->increment("ranc", amount)',
+                    'decrement' => '$user->subscriptionWallet->decrement("ranc", amount)',
+                    'update' => '$user->subscriptionWallet->update(["ranc" => newAmount])'
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Verification failed: ' . $e->getMessage(),
+                'error_details' => [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]
+            ], 500);
+        }
+    }
+
+    /**
+     * Test multiple users at once
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function testMultipleUsers(Request $request)
+    {
+        $testUsers = $request->get('users', [1, 2, 3]);
+        $amount = $request->get('amount', 500);
+        $results = [];
+
+        foreach ($testUsers as $userId) {
+            try {
+                $user = \App\Models\User::find($userId);
+                
+                if (!$user) {
+                    $results[] = [
+                        'user_id' => $userId,
+                        'success' => false,
+                        'message' => 'User not found'
+                    ];
+                    continue;
+                }
+
+                $currentBalance = $user->subscriptionWallet ? $user->subscriptionWallet->ranc : 0;
+                
+                if ($user->subscriptionWallet) {
+                    $user->subscriptionWallet->increment('ranc', $amount);
+                    $user->subscriptionWallet->save();
+                }
+
+                $user->refresh();
+                $newBalance = $user->subscriptionWallet ? $user->subscriptionWallet->ranc : 0;
+
+                $results[] = [
+                    'user_id' => $userId,
+                    'success' => true,
+                    'user_name' => $user->name,
+                    'amount_credited' => $amount,
+                    'previous_balance' => $currentBalance,
+                    'new_balance' => $newBalance,
+                    'message' => "Credited {$amount} RANC to {$user->name}"
+                ];
+
+            } catch (\Exception $e) {
+                $results[] = [
+                    'user_id' => $userId,
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'test_summary' => [
+                'total_users_tested' => count($testUsers),
+                'successful_credits' => count(array_filter($results, fn($r) => $r['success'])),
+                'failed_credits' => count(array_filter($results, fn($r) => !$r['success']))
+            ],
+            'results' => $results
+        ]);
+    }
+}

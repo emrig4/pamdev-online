@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Modules\Account\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Modules\Wallet\Http\Traits\WalletTrait;
+
+class ManualCreditController
+{
+    use WalletTrait;
+
+    public function index()
+    {
+        // Get all users with their wallet information
+        // Using correct column names: first_name, last_name, username, email
+        $users = DB::table('users')
+            ->leftJoin('subscription_wallets', 'users.id', '=', 'subscription_wallets.user_id')
+            ->select('users.id', 'users.first_name', 'users.last_name', 'users.username', 'users.email', 'subscription_wallets.ranc')
+            ->orderBy('users.email')
+            ->get();
+
+        // Add full name field for display
+        $usersWithNames = $users->map(function($user) {
+            // Create full name from available columns
+            $userName = null;
+            
+            if (!empty($user->first_name) && !empty($user->last_name)) {
+                $userName = trim($user->first_name . ' ' . $user->last_name);
+            } elseif (!empty($user->username)) {
+                $userName = $user->username;
+            } elseif (!empty($user->first_name)) {
+                $userName = $user->first_name;
+            } else {
+                // Fallback to email username
+                $userName = explode('@', $user->email)[0];
+            }
+            
+            $user->name = $userName;
+            return $user;
+        });
+
+        return view('account::manual-credit', compact('users'));
+    }
+
+    public function processCredit(Request $request)
+    {
+        $request->validate([
+            'user_email' => 'required|email|exists:users,email',
+            'ranc_amount' => 'required|numeric|min:1',
+            'reason' => 'required|string|max:255'
+        ]);
+
+        try {
+            $user = \App\Models\User::where('email', $request->user_email)->firstOrFail();
+            $rancAmount = $request->ranc_amount;
+            $reason = $request->reason;
+
+            // Use existing wallet crediting logic
+            $this->creditSubscriptionWallet($rancAmount);
+
+            // Log the transaction
+            DB::table('wallet_transactions')->insert([
+                'user_id' => $user->id,
+                'type' => 'manual_credit',
+                'amount' => $rancAmount,
+                'reason' => $reason,
+                'reference' => 'manual_' . time(),
+                'status' => 'completed',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            return back()->with('success', "Successfully credited {$rancAmount} RANC to {$user->email}!");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to credit wallet: ' . $e->getMessage());
+        }
+    }
+}

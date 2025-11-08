@@ -1,0 +1,75 @@
+
+<?php
+require 'vendor/autoload.php';
+
+$app = require_once 'bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+use App\Events\PaystackWebhookEvent;
+use App\Models\User;
+use App\Modules\Wallet\Models\CreditWallet;
+
+// Helper function to trigger event
+function triggerEvent(array $payload) {
+    echo "Triggering webhook event: " . ($payload['event'] ?? 'unknown') . "\n";
+    print_r($payload);
+    echo "\n";
+
+    try {
+        $event = new PaystackWebhookEvent($payload);
+        event($event);
+        echo "Webhook event processed successfully!\n\n";
+    } catch (\Exception $e) {
+        echo "Error triggering event: " . $e->getMessage() . "\n";
+    }
+}
+
+// Get test user
+$email = 'edwinemerenu@gmail.com';
+$user = User::where('email', $email)->first();
+if (!$user) {
+    echo "User not found: $email\n";
+    exit;
+}
+
+echo "User found: {$user->email} (ID: {$user->id})\n";
+
+// Current wallet balance
+$wallet = CreditWallet::where('user_id', $user->id)->first();
+echo "Current wallet balance: " . ($wallet ? $wallet->balance : 'No wallet') . "\n\n";
+
+// ----------------------
+// 1. Test charge.success
+$chargePayload = [
+    'event' => 'charge.success',
+    'data' => [
+        'reference' => 'TEST_CHARGE_' . time(),
+        'amount' => 150000, // ₦1,500 in kobo
+        'currency' => 'NGN',
+        'customer' => ['email' => $email],
+        'source' => ['source' => 'paystack'],
+        'plan' => null
+    ]
+];
+triggerEvent($chargePayload);
+
+// ----------------------
+// 2. Test subscription.create
+$subscriptionPayload = [
+    'event' => 'subscription.create',
+    'data' => [
+        'subscription_code' => 'SUBS_TEST_' . time(),
+        'customer' => ['email' => $email],
+        'plan' => [
+            'plan_name' => 'Monthly Premium',
+            'amount' => 300000 // ₦3,000 in kobo
+        ]
+    ]
+];
+triggerEvent($subscriptionPayload);
+
+// ----------------------
+// Final wallet balance
+$wallet = CreditWallet::where('user_id', $user->id)->first();
+echo "Final wallet balance: " . ($wallet ? $wallet->balance : 'No wallet') . "\n";
+echo "Test completed!\n";
