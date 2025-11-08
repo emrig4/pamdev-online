@@ -1,17 +1,64 @@
+# ======================================
+# Laravel & PHP Environment Files
+# ======================================
+.env
+.env.*
+!.env.example
+.phpunit.result.cache
+/storage/*.key
+
+# ======================================
+# Composer Dependencies
+# ======================================
+/vendor
+/composer.lock
+auth.json
+
+# ======================================
+# Node & Frontend Assets
+# ======================================
 /node_modules
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+package-lock.json
+
+# ======================================
+# Laravel Storage & Build Files
+# ======================================
+/storage/logs/*
+/storage/framework/*
+/bootstrap/cache/*.php
 /public/hot
 /public/storage
-/storage/*.key
-/vendor
-.env
-.env.backup
-.phpunit.result.cache
+
+# ======================================
+# IDE & Editor Files
+# ======================================
+/.idea
+/.vscode
+
+# ======================================
+# Docker & Homestead (local dev)
+# ======================================
 docker-compose.override.yml
 Homestead.json
 Homestead.yaml
-npm-debug.log
-yarn-error.log
-/.idea
-/.vscode
-auth.json
+
+# ======================================
+# OS or Miscellaneous Files
+# ======================================
+.DS_Store
+Thumbs.db
+*.log
+*.bak
+*.backup
+*.tmp
+*.swp
+
+# ======================================
+# Custom Backup / Sensitive Files
+# ======================================
+.env.backup
+/aws-credentials.json
 
